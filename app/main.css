@@ -1,0 +1,15 @@
+body {
+  @apply bg-slate-100;
+}
+
+.triangle-vote-up{
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 6px 12px 7px;
+  border-color: transparent transparent #888 transparent;
+}
+
+.text-white > .triangle-vote-up{
+    border-color: transparent transparent #fff transparent;
+}
