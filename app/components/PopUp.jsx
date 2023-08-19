@@ -1,11 +1,19 @@
 import React from "react";
 import Button from "./Button";
 
-const PopUp = ({ setShow, children, title }) => {
+const PopUp = ({ setShow, children, title, className, narrow }) => {
+  function close(e){
+    e.preventDefault()
+    e.stopPropagation();
+    setShow(false);
+  }
   return (
     <div
-      onClick={() => setShow(false)}
-      className="fixed inset-0 bg-white md:bg-black md:bg-opacity-80 flex md:items-center overflow-auto"
+      onClick={(e) => close(e)}
+      className={
+        "fixed inset-0 bg-white md:bg-black md:bg-opacity-80 flex md:items-center overflow-auto " +
+        className
+      }
     >
       <button
         onClick={() => setShow(false)}
@@ -28,8 +36,11 @@ const PopUp = ({ setShow, children, title }) => {
       </button>
       <div className="w-full">
         <div
-          className="bg-white md:max-w-2xl mx-auto md:rounded-lg overflow-hidden"
-          onClick={(e) => e.stopPropagation()}
+          className={
+            (narrow ? "max-w-sm p-4" : "md:max-w-2xl") +
+            " bg-white  mx-auto md:rounded-lg overflow-hidden"
+          }
+          onClick={(e) => close(e)}
         >
           <div className="relative min-h-[50px] md:min-h-0">
             <button

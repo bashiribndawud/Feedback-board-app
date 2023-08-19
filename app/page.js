@@ -1,14 +1,28 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import FeedBackItem from "./components/FeedBackItem";
 import FeedBackFormModal from "./components/FeedBackFormModal";
 import Button from "./components/Button";
 import FeedBackItemPopUp from "./components/FeedBackItemPopUp";
+import { useSession, signIn, signOut } from "next-auth/react";
+import axios from "axios";
 
 export default function Home() {
   const [showFeedBackPopUpForm, setShowFeedBackPopUpForm] = useState(false);
   const [showFeedBackPopupItem, setShowFeedBackPopupItem] = useState(null);
+  const [FeedBacks, setFeedbacks] = useState([]);
+  const { data: session } = useSession();
+
+  // if (session) {
+  //   return (
+  //     <>
+  //       Signed in as {session.user.email} <br />
+  //       <button onClick={() => signOut()}>Sign out</button>
+  //     </>
+  //   );
+  // }
+
   function openFeedBackModalForm() {
     setShowFeedBackPopUpForm(true);
   }
@@ -17,20 +31,9 @@ export default function Home() {
     setShowFeedBackPopupItem(feedback);
   }
 
-  const FeedBacks = [
-    {
-      title: "Please post more video",
-      description:
-        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum dignissimos voluptatibus ad consectetur exercitationem suscipit ducimus iusto repellendus, maiores molestias.",
-      voteCount: 10,
-    },
-    {
-      title: "Please post more video 2",
-      description:
-        "Dolorum dignissimos voluptatibus ad consectetur exercitationem suscipit ducimus iusto repellendus, maiores molestias.",
-      voteCount: 50,
-    },
-  ];
+  useEffect(() => {
+    axios.get("/api/feedback").then((res) => setFeedbacks(res.data));
+  }, []);
 
   return (
     <main className="bg-white  md:max-w-2xl mx-auto md:shadow-lg md:rounded-lg md:mt-8 overflow-hidden">
@@ -38,6 +41,11 @@ export default function Home() {
         <h1 className="font-bold text-xl ">bashAcademy</h1>
         <p className="text-opacity-90 text-slate-700">
           Help me decide what i should build next
+          {session ? (
+            <div>Hello, {session.user.name.split(" ")[0]} Welcome Aboard</div>
+          ) : (
+            <button onClick={() => signOut()}>Sign out</button>
+          )}
         </p>
       </div>
       <div className="bg-gray-100 px-8 py-4 flex border-b ">
