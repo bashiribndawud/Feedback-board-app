@@ -13,3 +13,14 @@ body {
 .text-white > .triangle-vote-up{
     border-color: transparent transparent #fff transparent;
 }
+
+.custom-loader {
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  border:8px solid;
+  border-color:#E4E4ED;
+  border-right-color: #766DF4;
+  animation:s2 1s infinite linear;
+}
+@keyframes s2 {to{transform: rotate(1turn)}}

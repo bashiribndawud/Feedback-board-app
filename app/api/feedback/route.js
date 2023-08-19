@@ -4,11 +4,12 @@ import { FeedBackModel } from "@app/models/Feedback";
 export async function POST(request){
     try {
         const jsonBody = await request.json();
-        const { title, description } = jsonBody;
+        const { title, description, uploads } = jsonBody;
         await connectToDatabase();
         await FeedBackModel.create({
           title,
           description,
+          images: uploads
         });
         return Response.json(jsonBody, { status: 201 });
     } catch (error) {

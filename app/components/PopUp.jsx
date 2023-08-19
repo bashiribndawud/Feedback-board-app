@@ -5,7 +5,7 @@ const PopUp = ({ setShow, children, title }) => {
   return (
     <div
       onClick={() => setShow(false)}
-      className="fixed inset-0 bg-white md:bg-black md:bg-opacity-80 flex md:items-center"
+      className="fixed inset-0 bg-white md:bg-black md:bg-opacity-80 flex md:items-center overflow-auto"
     >
       <button
         onClick={() => setShow(false)}
