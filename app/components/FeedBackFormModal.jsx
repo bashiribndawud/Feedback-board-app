@@ -12,6 +12,7 @@ const FeedBackFormModal = ({ setShow }) => {
   const [uploads, setUploads] = useState([]);
   const [isUploading, setIsUploading] = useState(false)
   const handleCreatePostButtonClick = (e) => {
+    e.stopPropagation()
     e.preventDefault();
     axios
       .post(
@@ -25,6 +26,7 @@ const FeedBackFormModal = ({ setShow }) => {
   };
 
   async function handleAttachFileInputChange(evt) {
+    evt.stopPropagation()
     const files = [...evt.target.files];
     setIsUploading(true)
     if (files?.length > 0) {
@@ -42,6 +44,7 @@ const FeedBackFormModal = ({ setShow }) => {
   }
 
   function handleFileRemove(e, link){
+    e.stopPropagation()
     e.preventDefault();
     setUploads((prevUpload) => {
       return prevUpload.filter(val => val !== link);
@@ -50,7 +53,7 @@ const FeedBackFormModal = ({ setShow }) => {
 
   return (
     <PopUp setShow={setShow} title={" Make a suggestion"}>
-      <form className="p-4 md:p-8">
+      <form onClick={(e) => e.stopPropagation()}  className="p-4 md:p-8">
         <label htmlFor="title" className="mt-4 mb-1 block text-slate-700">
           Title
         </label>

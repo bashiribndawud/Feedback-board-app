@@ -5,8 +5,7 @@ import { connectToDatabase } from "@utils/connectDatabase";
 import clientPromise from "@app/lib/mongoClient";
 
 
-
-const handler = NextAuth({
+export const authOptions = {
   secret: process.env.AUTH_SECRET,
   providers: [
     GoogleProvider({
@@ -15,9 +14,10 @@ const handler = NextAuth({
     }),
   ],
   adapter: MongoDBAdapter(clientPromise),
-  callbacks: {
+  callbacks: {},
+};
 
-  },
-});
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST }

@@ -14,15 +14,6 @@ export default function Home() {
   const [FeedBacks, setFeedbacks] = useState([]);
   const { data: session } = useSession();
 
-  // if (session) {
-  //   return (
-  //     <>
-  //       Signed in as {session.user.email} <br />
-  //       <button onClick={() => signOut()}>Sign out</button>
-  //     </>
-  //   );
-  // }
-
   function openFeedBackModalForm() {
     setShowFeedBackPopUpForm(true);
   }
@@ -35,16 +26,25 @@ export default function Home() {
     axios.get("/api/feedback").then((res) => setFeedbacks(res.data));
   }, []);
 
+  useEffect(() => {
+    if(session?.user?.email){
+     const feedbackId = localStorage.getItem('going_to_vote')
+     if(feedbackId){
+       axios.post('/api/vote', {feedbackId}).then((response) => {
+        localStorage.removeItem("going_to_vote");
+       })
+     }
+    }
+  },[session?.user?.email])
+
   return (
     <main className="bg-white  md:max-w-2xl mx-auto md:shadow-lg md:rounded-lg md:mt-8 overflow-hidden">
       <div className="bg-gradient-to-r from-cyan-400 to-blue-400 p-8">
         <h1 className="font-bold text-xl ">bashAcademy</h1>
         <p className="text-opacity-90 text-slate-700">
           Help me decide what i should build next
-          {session ? (
-            <div>Hello, {session.user.name.split(" ")[0]} Welcome Aboard</div>
-          ) : (
-            <button onClick={() => signOut()}>Sign out</button>
+          {session && (
+            <div className="font-bold">Hello {session.user.name.split(" ")[0]}, Welcome Aboard</div>
           )}
         </p>
       </div>

@@ -1,22 +1,25 @@
 import React, { useState } from "react";
 import PopUp from "./PopUp";
 import Button from "./Button";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
-
-const FeedBackItem = ({ onOpen, title, description, voteCount }) => {
+const FeedBackItem = ({ onOpen, title, description, voteCount, _id }) => {
+  const { data: session } = useSession();
   const isLoggedIn = false;
   const [showLoginPopUp, setShowLoginPopUp] = useState(false);
   function handleVoteButtonClicked(e) {
     e.preventDefault();
     e.stopPropagation();
-    setShowLoginPopUp(true);
+    if (!session) {
+      setShowLoginPopUp(true);
+    }
+    localStorage.setItem('going_to_vote', _id)
   }
 
-  async function handleUserLoginGoogle(ev){
+  async function handleUserLoginGoogle(ev) {
     ev.stopPropagation();
     ev.preventDefault();
-    await signIn('google');
+    await signIn("google");
   }
   return (
     <a
@@ -38,7 +41,9 @@ const FeedBackItem = ({ onOpen, title, description, voteCount }) => {
           setShow={setShowLoginPopUp}
           className="z-10"
         >
-          <Button onClick={(e) => handleUserLoginGoogle(e)} danger>Login With Google</Button>
+          <Button onClick={(e) => handleUserLoginGoogle(e)} danger>
+            Login With Google
+          </Button>
         </PopUp>
       )}
       <div>
