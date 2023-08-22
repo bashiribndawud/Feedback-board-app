@@ -3,7 +3,14 @@ import PopUp from "./PopUp";
 import Button from "./Button";
 import { signIn, useSession } from "next-auth/react";
 
-const FeedBackItem = ({ onOpen, title, description, voteCount, _id }) => {
+const FeedBackItem = ({
+  onOpen,
+  title,
+  description,
+  voteCount,
+  _id,
+  setFeedbacksId,
+}) => {
   const { data: session } = useSession();
   const isLoggedIn = false;
   const [showLoginPopUp, setShowLoginPopUp] = useState(false);
@@ -13,7 +20,8 @@ const FeedBackItem = ({ onOpen, title, description, voteCount, _id }) => {
     if (!session) {
       setShowLoginPopUp(true);
     }
-    localStorage.setItem('going_to_vote', _id)
+    // setFeedbacksId(localStorage.setItem("going_to_vote", _id));
+    localStorage.setItem("going_to_vote", _id);
   }
 
   async function handleUserLoginGoogle(ev) {

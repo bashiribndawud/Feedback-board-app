@@ -5,13 +5,15 @@ import FeedBackItem from "./components/FeedBackItem";
 import FeedBackFormModal from "./components/FeedBackFormModal";
 import Button from "./components/Button";
 import FeedBackItemPopUp from "./components/FeedBackItemPopUp";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signIn, signOut, useClient } from "next-auth/react";
 import axios from "axios";
 
 export default function Home() {
   const [showFeedBackPopUpForm, setShowFeedBackPopUpForm] = useState(false);
   const [showFeedBackPopupItem, setShowFeedBackPopupItem] = useState(null);
   const [FeedBacks, setFeedbacks] = useState([]);
+  const [feedbackId, setFeedbacksId] = useState('')
+  const [votes, setVotes] = useState([]);
   const { data: session } = useSession();
 
   function openFeedBackModalForm() {
@@ -22,20 +24,37 @@ export default function Home() {
     setShowFeedBackPopupItem(feedback);
   }
 
+  // GET -> get all feedbacks
   useEffect(() => {
     axios.get("/api/feedback").then((res) => setFeedbacks(res.data));
   }, []);
 
+  // GET -> votes from all fetched feedbacks
   useEffect(() => {
-    if(session?.user?.email){
-     const feedbackId = localStorage.getItem('going_to_vote')
-     if(feedbackId){
-       axios.post('/api/vote', {feedbackId}).then((response) => {
-        localStorage.removeItem("going_to_vote");
-       })
-     }
+    async function getVotes(){
+      try {
+        const response = await axios.get(
+          "/api/vote?feedbackIds=" + FeedBacks.map((f) => f._id).join(",")
+        );
+        setVotes(response.data);
+        console.log(votes)
+      } catch (error) {
+        console.error("Error fetching votes:", error);
+      }
     }
-  },[session?.user?.email])
+    getVotes();
+  }, [FeedBacks])
+  
+  useEffect(() => {
+    if (session?.user?.email) {
+      const feedbackId = localStorage.getItem("going_to_vote");
+      if (feedbackId) {
+        axios.post("/api/vote", { feedbackId }).then((response) => {
+          localStorage.removeItem("going_to_vote");
+        });
+      }
+    }
+  }, [session?.user?.email]);
 
   return (
     <main className="bg-white  md:max-w-2xl mx-auto md:shadow-lg md:rounded-lg md:mt-8 overflow-hidden">
@@ -44,7 +63,9 @@ export default function Home() {
         <p className="text-opacity-90 text-slate-700">
           Help me decide what i should build next
           {session && (
-            <div className="font-bold">Hello {session.user.name.split(" ")[0]}, Welcome Aboard</div>
+            <div className="font-bold">
+              Hello {session.user.name.split(" ")[0]}, Welcome Aboard
+            </div>
           )}
         </p>
       </div>
@@ -62,6 +83,8 @@ export default function Home() {
             key={feedback.title}
             {...feedback}
             onOpen={() => openFeedBackPopupItem(feedback)}
+            // vote={votes.find(v => v.feedbackId === feedback._id)}
+            // setFeedbacksId={setFeedbacksId}
           />
         ))}
       </div>
