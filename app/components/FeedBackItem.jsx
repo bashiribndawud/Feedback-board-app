@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import PopUp from "./PopUp";
 import Button from "./Button";
 import { signIn, useSession } from "next-auth/react";
+import axios from "axios";
+import Loader from "./Loader";
 
 const FeedBackItem = ({
   onOpen,
@@ -10,18 +12,28 @@ const FeedBackItem = ({
   voteCount,
   _id,
   setFeedbacksId,
+  votes,
+  onVoteChange,
+  parentLoadingVotes = true,
 }) => {
   const { data: session } = useSession();
-  const isLoggedIn = false;
+  const isLoggedIn = !!session?.user?.email;
   const [showLoginPopUp, setShowLoginPopUp] = useState(false);
+  const [voteloading, setvoteloading] = useState(false);
+
   function handleVoteButtonClicked(e) {
     e.preventDefault();
     e.stopPropagation();
     if (!session) {
+      localStorage.setItem("going_to_vote", _id);
       setShowLoginPopUp(true);
+    } else {
+      setvoteloading(true);
+      axios.post("/api/vote", { feedbackId: _id }).then(async (res) => {
+        await onVoteChange();
+        setvoteloading(false);
+      });
     }
-    // setFeedbacksId(localStorage.setItem("going_to_vote", _id));
-    localStorage.setItem("going_to_vote", _id);
   }
 
   async function handleUserLoginGoogle(ev) {
@@ -29,6 +41,9 @@ const FeedBackItem = ({
     ev.preventDefault();
     await signIn("google");
   }
+
+  const iVote = votes?.find((v) => v.user === session?.user?.email);
+  
   return (
     <a
       href="#"
@@ -55,13 +70,23 @@ const FeedBackItem = ({
         </PopUp>
       )}
       <div>
-        <button
+        <Button
+          primary={!!iVote}
           onClick={(e) => handleVoteButtonClicked(e)}
-          className="mb-2 sm:mb-0 shadow-sm shadow-gray-200 border rounded-md py-1 text-gray-600 px-4 flex justify-center items-center gap-1"
+          className="shadow-lg border"
         >
-          <span className="triangle-vote-up relative"></span>
-          {voteCount || 0}
-        </button>
+          {!voteloading && (
+            <>
+              <span className="triangle-vote-up relative"></span>
+              {votes?.length || "0"}
+            </>
+          )}
+          {voteloading && (
+            <>
+              <Loader />
+            </>
+          )}
+        </Button>
       </div>
     </a>
   );

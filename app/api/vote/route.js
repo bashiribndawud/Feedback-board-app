@@ -30,7 +30,6 @@ export async function GET(request) {
   if (url.searchParams.get("feedbackIds")) {
     const feedbackIds = url.searchParams.get("feedbackIds").split(",");
     const voteDocs = await Vote.find({ feedbackId: feedbackIds });
-    console.log(voteDocs);
     return Response.json(voteDocs);
   } 
   return Response.json([]);

@@ -12,7 +12,8 @@ export default function Home() {
   const [showFeedBackPopUpForm, setShowFeedBackPopUpForm] = useState(false);
   const [showFeedBackPopupItem, setShowFeedBackPopupItem] = useState(null);
   const [FeedBacks, setFeedbacks] = useState([]);
-  const [feedbackId, setFeedbacksId] = useState('')
+  const [feedbackId, setFeedbacksId] = useState("");
+  const [voteLoading, setVoteLoading] = useState(false)
   const [votes, setVotes] = useState([]);
   const { data: session } = useSession();
 
@@ -31,30 +32,29 @@ export default function Home() {
 
   // GET -> votes from all fetched feedbacks
   useEffect(() => {
-    async function getVotes(){
-      try {
-        const response = await axios.get(
-          "/api/vote?feedbackIds=" + FeedBacks.map((f) => f._id).join(",")
-        );
-        setVotes(response.data);
-        console.log(votes)
-      } catch (error) {
-        console.error("Error fetching votes:", error);
-      }
-    }
-    getVotes();
-  }, [FeedBacks])
-  
+    fetchVotes();
+  }, [FeedBacks]);
+
   useEffect(() => {
     if (session?.user?.email) {
       const feedbackId = localStorage.getItem("going_to_vote");
       if (feedbackId) {
         axios.post("/api/vote", { feedbackId }).then((response) => {
           localStorage.removeItem("going_to_vote");
+          fetchVotes();
         });
       }
     }
   }, [session?.user?.email]);
+
+  async function fetchVotes() {
+    setVoteLoading(true)
+    const res = await axios.get(
+      "/api/vote?feedbackIds=" + FeedBacks.map((f) => f._id).join(",")
+    );
+    setVotes(res.data)
+    setVoteLoading(false)
+  }
 
   return (
     <main className="bg-white  md:max-w-2xl mx-auto md:shadow-lg md:rounded-lg md:mt-8 overflow-hidden">
@@ -83,8 +83,11 @@ export default function Home() {
             key={feedback.title}
             {...feedback}
             onOpen={() => openFeedBackPopupItem(feedback)}
-            // vote={votes.find(v => v.feedbackId === feedback._id)}
-            // setFeedbacksId={setFeedbacksId}
+            votes={votes.filter(
+              (v) => v.feedbackId.toString() === feedback._id.toString()
+            )}
+            onVoteChange={fetchVotes}
+            parentLoadingVotes={voteLoading}
           />
         ))}
       </div>
@@ -96,6 +99,8 @@ export default function Home() {
           <FeedBackItemPopUp
             setShow={setShowFeedBackPopupItem}
             {...showFeedBackPopupItem}
+            votes={votes.filter(v => v.feedbackId.toString() === showFeedBackPopupItem._id.toString())}
+            onVoteChange={fetchVotes}
           />
         </div>
       )}
