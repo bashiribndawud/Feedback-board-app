@@ -7,13 +7,15 @@ import Button from "./components/Button";
 import FeedBackItemPopUp from "./components/FeedBackItemPopUp";
 import { useSession, signIn, signOut, useClient } from "next-auth/react";
 import axios from "axios";
+import SignOut from "./components/icons/SignOut";
+import SignIn from "./components/icons/SignIn";
 
 export default function Home() {
   const [showFeedBackPopUpForm, setShowFeedBackPopUpForm] = useState(false);
   const [showFeedBackPopupItem, setShowFeedBackPopupItem] = useState(null);
   const [FeedBacks, setFeedbacks] = useState([]);
   const [feedbackId, setFeedbacksId] = useState("");
-  const [voteLoading, setVoteLoading] = useState(false)
+  const [voteLoading, setVoteLoading] = useState(false);
   const [votes, setVotes] = useState([]);
   const { data: session } = useSession();
 
@@ -26,8 +28,9 @@ export default function Home() {
   }
 
   // GET -> get all feedbacks
+
   useEffect(() => {
-    axios.get("/api/feedback").then((res) => setFeedbacks(res.data));
+    FetchAllFeedBacks();
   }, []);
 
   // GET -> votes from all fetched feedbacks
@@ -48,12 +51,28 @@ export default function Home() {
   }, [session?.user?.email]);
 
   async function fetchVotes() {
-    setVoteLoading(true)
+    setVoteLoading(true);
     const res = await axios.get(
       "/api/vote?feedbackIds=" + FeedBacks.map((f) => f._id).join(",")
     );
-    setVotes(res.data)
-    setVoteLoading(false)
+    setVotes(res.data);
+    setVoteLoading(false);
+  }
+
+  async function FetchAllFeedBacks() {
+    const res = await axios.get("/api/feedback");
+    setFeedbacks(res.data);
+  }
+
+  function handleUserLogOut(e) {
+    e.preventDefault();
+    if (session?.user) {
+      signOut();
+    }
+  }
+  async function handleUserSignIn(e){
+    e.preventDefault();
+    await signIn("google");
   }
 
   return (
@@ -63,8 +82,28 @@ export default function Home() {
         <p className="text-opacity-90 text-slate-700">
           Help me decide what i should build next
           {session && (
-            <div className="font-bold">
-              Hello {session.user.name.split(" ")[0]}, Welcome Aboard
+            <div className="font-bold flex justify-between items-center">
+              <span>
+                Hello {session.user.name.split(" ")[0]}, Welcome Aboard
+              </span>
+              <button
+                onClick={handleUserLogOut}
+                className="text-sm font-light flex items-center gap-1 bg-white p-2 rounded-lg shadow-lg"
+              >
+                <SignOut />
+                Logout
+              </button>
+            </div>
+          )}
+          {!session?.user && (
+            <div className="flex justify-end">
+              <button
+                onClick={handleUserSignIn}
+                className="text-sm font-light flex gap-1 items-center bg-white p-2 rounded-lg shadow-lg"
+              >
+                <SignIn />
+                SignIn
+              </button>
             </div>
           )}
         </p>
@@ -92,14 +131,20 @@ export default function Home() {
         ))}
       </div>
       {showFeedBackPopUpForm && (
-        <FeedBackFormModal setShow={setShowFeedBackPopUpForm} />
+        <FeedBackFormModal
+          setShow={setShowFeedBackPopUpForm}
+          onCreate={FetchAllFeedBacks}
+        />
       )}
       {showFeedBackPopupItem && (
         <div className="fixed inset-0 bg-white md:bg-black md:bg-opacity-50 ">
           <FeedBackItemPopUp
             setShow={setShowFeedBackPopupItem}
             {...showFeedBackPopupItem}
-            votes={votes.filter(v => v.feedbackId.toString() === showFeedBackPopupItem._id.toString())}
+            votes={votes.filter(
+              (v) =>
+                v.feedbackId.toString() === showFeedBackPopupItem._id.toString()
+            )}
             onVoteChange={fetchVotes}
           />
         </div>

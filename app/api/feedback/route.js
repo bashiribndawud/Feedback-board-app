@@ -1,15 +1,20 @@
 import { connectToDatabase } from "@utils/connectDatabase";
 import { FeedBackModel } from "@app/models/Feedback";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 export async function POST(request) {
   try {
     const jsonBody = await request.json();
     const { title, description, uploads } = jsonBody;
     await connectToDatabase();
+    const session = await getServerSession(authOptions)
+    const userEmail = session.user.email
     await FeedBackModel.create({
       title,
       description,
       images: uploads,
+      userEmail,
     });
     return Response.json(jsonBody, { status: 201 });
   } catch (error) {

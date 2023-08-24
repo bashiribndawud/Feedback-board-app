@@ -4,6 +4,7 @@ const feedbackSchema = new Schema(
   {
     title: { type: String, required: [true, "Title is required"] },
     description: { type: String, required: [true, "Description is required"] },
+    userEmail: {type: String, require: true},
     images: { type: [String] },
   },
   { timestamps: true }

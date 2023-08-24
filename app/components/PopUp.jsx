@@ -34,11 +34,11 @@ const PopUp = ({ setShow, children, title, className, narrow }) => {
           />
         </svg>
       </button>
-      <div className="w-full">
+      <div className="w-full h-full overflow-y-scroll">
         <div
           className={
             (narrow ? "max-w-sm p-4" : "md:max-w-2xl") +
-            " bg-white  mx-auto md:rounded-lg overflow-hidden"
+            " bg-white md:my-8  mx-auto md:rounded-lg overflow-hidden"
           }
           onClick={(e) => close(e)}
         >
