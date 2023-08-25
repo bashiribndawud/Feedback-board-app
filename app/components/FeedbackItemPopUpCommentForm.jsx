@@ -71,7 +71,7 @@ const FeedbackItemPopUpCommentForm = ({feedbackId, onPost}) => {
       <div className="flex justify-end gap-2 mt-2">
         <AttachFileButton onNewFiles={addNewUploads} />
         <Button primary disabled={commentText === ""} onClick={handleCommentButtonClick}>
-          {session? 'Login' : 'Login and Comment'}
+          {session? 'Create Comment' : 'Login and Comment'}
         </Button>
       </div>
     </form>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Loader from './Loader';
 import axios from 'axios';
+import Upload from './icons/Upload';
 
 const AttachFileButton = ({onNewFiles}) => {
     const [isUploading, setisUploading] = useState(false)
@@ -25,6 +26,7 @@ const AttachFileButton = ({onNewFiles}) => {
       className="py-2 p-x4 text-gray-600 cursor-pointer flex gap-2 items-center"
     >
       {isUploading && <Loader />}
+      {!isUploading && <Upload className='w-5 h-5' />}
       <span className={isUploading ? "text-gray-300" : "text-gray-600"}>
         {isUploading ? "Uploading..." : "Attach File"}
       </span>

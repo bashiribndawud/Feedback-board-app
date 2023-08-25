@@ -1,5 +1,5 @@
 import { Schema, model, models } from "mongoose";
-
+import "./User"
 const feedbackSchema = new Schema(
   {
     title: { type: String, required: [true, "Title is required"] },
@@ -7,8 +7,15 @@ const feedbackSchema = new Schema(
     userEmail: {type: String, require: true},
     images: { type: [String] },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: {virtuals: true}, toObject: {virtuals: true} }
 );
+
+feedbackSchema.virtual("user", {
+  ref: "User",
+  localField: "userEmail",
+  foreignField: "email",
+  justOne: true,
+});
 
 export const FeedBackModel =
   models?.FeedBack || model("FeedBack", feedbackSchema);

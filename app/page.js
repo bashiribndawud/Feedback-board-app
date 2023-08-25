@@ -96,6 +96,13 @@ export default function Home() {
     await signIn("google");
   }
 
+  async function handleFeedbackupdate(newData){
+    setShowFeedBackPopupItem(prevItems => {
+      return {...prevItems, ...newData}
+    })
+    await FetchAllFeedBacks();
+  }
+
   return (
     <main className="bg-white  md:max-w-2xl mx-auto md:shadow-lg md:rounded-lg md:mt-8 overflow-hidden">
       <div className="bg-gradient-to-r from-cyan-400 to-blue-400 p-8">
@@ -137,19 +144,20 @@ export default function Home() {
           </Button>
         </div>
       </div>
-      <div className="px-8 ">
-        {FeedBacks.length > 0 && FeedBacks.map((feedback) => (
-          <FeedBackItem
-            key={feedback.title}
-            {...feedback}
-            onOpen={() => openFeedBackPopupItem(feedback)}
-            votes={votes.filter(
-              (v) => v.feedbackId.toString() === feedback._id.toString()
-            )}
-            onVoteChange={fetchVotes}
-            parentLoadingVotes={voteLoading}
-          />
-        ))}
+      <div className="px-4 md:px-8">
+        {FeedBacks.length > 0 &&
+          FeedBacks.map((feedback) => (
+            <FeedBackItem
+              key={feedback.title}
+              {...feedback}
+              onOpen={() => openFeedBackPopupItem(feedback)}
+              votes={votes.filter(
+                (v) => v.feedbackId.toString() === feedback._id.toString()
+              )}
+              onVoteChange={fetchVotes}
+              parentLoadingVotes={voteLoading}
+            />
+          ))}
       </div>
       {showFeedBackPopUpForm && (
         <FeedBackFormModal
@@ -167,6 +175,7 @@ export default function Home() {
                 v.feedbackId.toString() === showFeedBackPopupItem._id.toString()
             )}
             onVoteChange={fetchVotes}
+            onUpdate={handleFeedbackupdate}
           />
         </div>
       )}

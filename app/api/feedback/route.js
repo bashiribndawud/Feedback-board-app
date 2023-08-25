@@ -32,10 +32,26 @@ export async function GET(req) {
         await FeedBackModel.findById(url.searchParams.get("id"))
       );
     } else {
-      return Response.json(await FeedBackModel.find());
+      return Response.json(await FeedBackModel.find().populate("user"));
     }
   } catch (error) {
     console.log(error.message);
     return Response.json({ error: error.message });
   }
+}
+
+export async function PUT(request) {
+  const jsonBody = await request.json();
+  const { title, description, images, id } = jsonBody;
+  await connectToDatabase();
+  const session = await getServerSession(authOptions);
+  if(!session){
+    return Response.json(false)
+  }
+  const newFeedBackDoc = await FeedBackModel.updateOne(
+    { _id: id, userEmail: session.user.email },
+    { title, description, images },
+  );
+
+ return Response.json(newFeedBackDoc);
 }
