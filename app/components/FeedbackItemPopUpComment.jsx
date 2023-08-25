@@ -18,7 +18,7 @@ const FeedbackItemPopUpComment = ({ feedbackId }) => {
     axios.get("/api/comment?feedbackId=" + feedbackId).then((res) => {
       setcomments(res.data);
     });
-    console.log(comments);
+    
   }
   return (
     <div className="p-8">

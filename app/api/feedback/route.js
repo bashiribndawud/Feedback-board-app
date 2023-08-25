@@ -8,27 +8,34 @@ export async function POST(request) {
     const jsonBody = await request.json();
     const { title, description, uploads } = jsonBody;
     await connectToDatabase();
-    const session = await getServerSession(authOptions)
-    const userEmail = session.user.email
-    await FeedBackModel.create({
+    const session = await getServerSession(authOptions);
+    const userEmail = session.user.email;
+    const feedbackDoc = await FeedBackModel.create({
       title,
       description,
       images: uploads,
       userEmail,
     });
-    return Response.json(jsonBody, { status: 201 });
+    return Response.json(feedbackDoc, { status: 201 });
   } catch (error) {
     console.log(error.message);
     return new Response("Failed to get create post", { status: 500 });
   }
 }
 
-export async function GET() {
+export async function GET(req) {
+  await connectToDatabase();
   try {
-    await connectToDatabase();
-    return Response.json(await FeedBackModel.find());
+    const url = new URL(req.url);
+    if (url.searchParams.get("id")) {
+      return Response.json(
+        await FeedBackModel.findById(url.searchParams.get("id"))
+      );
+    } else {
+      return Response.json(await FeedBackModel.find());
+    }
   } catch (error) {
     console.log(error.message);
-    return Response.json({error: error.message})
+    return Response.json({ error: error.message });
   }
 }

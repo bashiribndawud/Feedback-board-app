@@ -36,16 +36,37 @@ export default function Home() {
   // GET -> votes from all fetched feedbacks
   useEffect(() => {
     fetchVotes();
-  }, [FeedBacks]);
+  }, []);
 
   useEffect(() => {
     if (session?.user?.email) {
-      const feedbackId = localStorage.getItem("going_to_vote");
+      const feedbackToVote = localStorage.getItem("going_to_vote");
       if (feedbackId) {
-        axios.post("/api/vote", { feedbackId }).then((response) => {
-          localStorage.removeItem("going_to_vote");
-          fetchVotes();
-        });
+        axios
+          .post("/api/vote", { feedbackId: feedbackToVote })
+          .then((response) => {
+            localStorage.removeItem("going_to_vote");
+            fetchVotes();
+          });
+      }
+      const feedBackToPost = localStorage.getItem("post_after_login");
+      if(feedBackToPost){
+        const FeedbackData = JSON.parse(feedBackToPost)
+        axios.post('/api/feedback', FeedbackData).then(async(res) => {
+          await FetchAllFeedBacks()
+          setShowFeedBackPopupItem(res.data)
+          localStorage.removeItem("post_after_login");
+        })
+      }
+      const feedBackComment = localStorage.getItem("comment_to_post");
+      if(feedBackComment){
+        const FeedbackCommentData = JSON.parse(feedBackComment);
+        axios.post('/api/comment', FeedbackCommentData).then(() => {
+          axios.get('/api/feedback?id='+FeedbackCommentData.feedbackId).then((res) => {
+            setShowFeedBackPopupItem(res.data)
+            localStorage.removeItem("comment_to_post");
+          })
+        })
       }
     }
   }, [session?.user?.email]);
@@ -117,7 +138,7 @@ export default function Home() {
         </div>
       </div>
       <div className="px-8 ">
-        {FeedBacks.map((feedback) => (
+        {FeedBacks.length > 0 && FeedBacks.map((feedback) => (
           <FeedBackItem
             key={feedback.title}
             {...feedback}

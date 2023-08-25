@@ -8,8 +8,10 @@ export async function POST(req) {
   await connectToDatabase();
   const jsonBody = await req.json();
   const session = await getServerSession(authOptions);
-  console.log(session);
   const { email: userEmail } = session.user;
+  if(!session){
+    return Response.json(false);
+  }
   const commentDoc = await CommentModel.create({
     text: jsonBody.comment,
     uploads: jsonBody.uploads,

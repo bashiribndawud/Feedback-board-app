@@ -4,7 +4,7 @@ import Loader from "./Loader";
 import AttachFileButton from "./AttachFileButton";
 import Attachement from "./Attachement";
 import axios from "axios";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 const FeedbackItemPopUpCommentForm = ({feedbackId, onPost}) => {
   const [commentText, setCommentText] = useState("");
@@ -22,14 +22,24 @@ const FeedbackItemPopUpCommentForm = ({feedbackId, onPost}) => {
   }
   async function handleCommentButtonClick(e){
     e.preventDefault()
-    if(!session?.user){
-       return  alert("Please Login First")
+    const commentData = { comment: commentText, uploads, feedbackId };
+    if(session){
+       const response = await axios.post("/api/comment", commentData);
+       setCommentText("");
+       setUploads([]);
+       onPost();
+    }else {
+        localStorage.setItem(
+          "comment_to_post",
+          JSON.stringify(commentData)
+        );
+        await signIn('google');
+        // setCommentText("");
+        // setUploads([]);
+        // onPost();
     }
     
-    const response = await axios.post('/api/comment', {comment:commentText, uploads, feedbackId})
-    setCommentText("")
-    setUploads([])
-    onPost()
+    
   }
   return (
     <form action="">
@@ -61,7 +71,7 @@ const FeedbackItemPopUpCommentForm = ({feedbackId, onPost}) => {
       <div className="flex justify-end gap-2 mt-2">
         <AttachFileButton onNewFiles={addNewUploads} />
         <Button primary disabled={commentText === ""} onClick={handleCommentButtonClick}>
-          Comment
+          {session? 'Login' : 'Login and Comment'}
         </Button>
       </div>
     </form>
