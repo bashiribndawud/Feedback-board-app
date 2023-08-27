@@ -103,7 +103,7 @@ const FeedBackFormModal = ({ setShow, onCreate }) => {
             onClick={handleCreatePostButtonClick}
             disabled={description === ""}
           >
-            {session? 'Create post' : 'Login and post'}
+            {session? 'Create' : 'Login and Create'}
           </Button>
         </div>
       </form>

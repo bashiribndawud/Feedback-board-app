@@ -5,9 +5,9 @@ import { authOptions } from "../auth/[...nextauth]/route";
 
 export async function POST(request) {
   try {
+    await connectToDatabase();
     const jsonBody = await request.json();
     const { title, description, uploads } = jsonBody;
-    await connectToDatabase();
     const session = await getServerSession(authOptions);
     const userEmail = session.user.email;
     const feedbackDoc = await FeedBackModel.create({
@@ -41,17 +41,21 @@ export async function GET(req) {
 }
 
 export async function PUT(request) {
-  const jsonBody = await request.json();
-  const { title, description, images, id } = jsonBody;
-  await connectToDatabase();
-  const session = await getServerSession(authOptions);
-  if(!session){
-    return Response.json(false)
-  }
-  const newFeedBackDoc = await FeedBackModel.updateOne(
-    { _id: id, userEmail: session.user.email },
-    { title, description, images },
-  );
+  try {
+    await connectToDatabase();
+    const jsonBody = await request.json();
+    const { title, description, images, id } = jsonBody;
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return Response.json(false);
+    }
+    const newFeedBackDoc = await FeedBackModel.updateOne(
+      { _id: id, userEmail: session.user.email },
+      { title, description, images }
+    );
 
- return Response.json(newFeedBackDoc);
+    return Response.json(newFeedBackDoc);
+  } catch (error) {
+    
+  }
 }
