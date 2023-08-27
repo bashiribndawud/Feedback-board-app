@@ -27,12 +27,32 @@ export async function GET(req) {
   await connectToDatabase();
   try {
     const url = new URL(req.url);
+
     if (url.searchParams.get("id")) {
       return Response.json(
         await FeedBackModel.findById(url.searchParams.get("id"))
       );
     } else {
-      return Response.json(await FeedBackModel.find().populate("user"));
+      const sortParam = url.searchParams.get("sort");
+      const lastId = url.searchParams.get("lastId");
+      console.log(lastId);
+      let sortDefinition;
+      if (sortParam === "latest") {
+        sortDefinition = { createdAt: -1 };
+      }
+      if (sortParam === "oldest") {
+        sortDefinition = { createdAt: 1 };
+      }
+      if (sortParam === "votes") {
+        sortDefinition = { votesCountCached: -1 };
+      }
+      const filter = lastId ? {_id: {$gt: lastId}} : null
+      return Response.json(
+        await FeedBackModel.find(filter, null, {
+          sort: sortDefinition,
+          limit: 10,
+        }).populate("user")
+      );
     }
   } catch (error) {
     console.log(error.message);
@@ -55,7 +75,5 @@ export async function PUT(request) {
     );
 
     return Response.json(newFeedBackDoc);
-  } catch (error) {
-    
-  }
+  } catch (error) {}
 }

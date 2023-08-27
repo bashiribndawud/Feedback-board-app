@@ -16,6 +16,8 @@ export default function Home() {
   const [FeedBacks, setFeedbacks] = useState([]);
   const [feedbackId, setFeedbacksId] = useState("");
   const [voteLoading, setVoteLoading] = useState(false);
+  const [sort, setSort] = useState("votes");
+  const [lastId, setLastId] = useState('')
   const [votes, setVotes] = useState([]);
   const { data: session } = useSession();
 
@@ -31,12 +33,12 @@ export default function Home() {
 
   useEffect(() => {
     FetchAllFeedBacks();
-  }, []);
+  }, [sort]);
 
   // GET -> votes from all fetched feedbacks
   useEffect(() => {
     fetchVotes();
-  }, []);
+  }, [FeedBacks]);
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -50,23 +52,25 @@ export default function Home() {
           });
       }
       const feedBackToPost = localStorage.getItem("post_after_login");
-      if(feedBackToPost){
-        const FeedbackData = JSON.parse(feedBackToPost)
-        axios.post('/api/feedback', FeedbackData).then(async(res) => {
-          await FetchAllFeedBacks()
-          setShowFeedBackPopupItem(res.data)
+      if (feedBackToPost) {
+        const FeedbackData = JSON.parse(feedBackToPost);
+        axios.post("/api/feedback", FeedbackData).then(async (res) => {
+          await FetchAllFeedBacks();
+          setShowFeedBackPopupItem(res.data);
           localStorage.removeItem("post_after_login");
-        })
+        });
       }
       const feedBackComment = localStorage.getItem("comment_to_post");
-      if(feedBackComment){
+      if (feedBackComment) {
         const FeedbackCommentData = JSON.parse(feedBackComment);
-        axios.post('/api/comment', FeedbackCommentData).then(() => {
-          axios.get('/api/feedback?id='+FeedbackCommentData.feedbackId).then((res) => {
-            setShowFeedBackPopupItem(res.data)
-            localStorage.removeItem("comment_to_post");
-          })
-        })
+        axios.post("/api/comment", FeedbackCommentData).then(() => {
+          axios
+            .get("/api/feedback?id=" + FeedbackCommentData.feedbackId)
+            .then((res) => {
+              setShowFeedBackPopupItem(res.data);
+              localStorage.removeItem("comment_to_post");
+            });
+        });
       }
     }
   }, [session?.user?.email]);
@@ -79,10 +83,28 @@ export default function Home() {
     setVotes(res.data);
     setVoteLoading(false);
   }
+  function handleScroll(e){
+    const html = window.document.querySelector('html');
+    const howMuchScrolled = html.scrollTop;
+    const howMuchIsToScroll = html.scrollHeight
+    const leftToScroll = howMuchIsToScroll - howMuchScrolled - html.clientHeight;
+    console.log({ leftToScroll });
+  }
+  function unregisterScrollListerner(){
+    window.removeEventListener("scroll", handleScroll);
+  }
+  function registerScrollLsitener(){
+    window.addEventListener('scroll', handleScroll)
+  }
+  useEffect(() => {
+    registerScrollLsitener()
 
+    return () => {unregisterScrollListerner();}
+  },[])
   async function FetchAllFeedBacks() {
-    const res = await axios.get("/api/feedback");
+    const res = await axios.get(`/api/feedback?sort=${sort}&lastId=${lastId}`);
     setFeedbacks(res.data);
+    setLastId(res.data[res.data.length - 1]._id)
   }
 
   function handleUserLogOut(e) {
@@ -91,17 +113,18 @@ export default function Home() {
       signOut();
     }
   }
-  async function handleUserSignIn(e){
+  async function handleUserSignIn(e) {
     e.preventDefault();
     await signIn("google");
   }
 
-  async function handleFeedbackupdate(newData){
-    setShowFeedBackPopupItem(prevItems => {
-      return {...prevItems, ...newData}
-    })
+  async function handleFeedbackupdate(newData) {
+    setShowFeedBackPopupItem((prevItems) => {
+      return { ...prevItems, ...newData };
+    });
     await FetchAllFeedBacks();
   }
+
 
   return (
     <main className="bg-white  md:max-w-2xl mx-auto md:shadow-lg md:rounded-lg md:mt-8 overflow-hidden">
@@ -136,13 +159,24 @@ export default function Home() {
           )}
         </p>
       </div>
-      <div className="bg-gray-100 px-8 py-4 flex border-b ">
-        <div className="grow">Filters</div>
-        <div>
-          <Button onClick={openFeedBackModalForm} primary>
-            Make a suggestion
-          </Button>
+      <div className="bg-gray-100 px-8 py-4 flex border-b items-center">
+        <div className="grow flex items-center">
+          <span className="text-gray-400 text-sm">Sort by:</span>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            name=""
+            id=""
+            className="bg-transparent py-2 px-2 text-gray-600"
+          >
+            <option value="votes">Most voted</option>
+            <option value="latest">Latest</option>
+            <option value="oldest">Oldest</option>
+          </select>
         </div>
+        <Button onClick={openFeedBackModalForm} primary>
+          Make a suggestion
+        </Button>
       </div>
       <div className="px-4 md:px-8">
         {FeedBacks.length > 0 &&
