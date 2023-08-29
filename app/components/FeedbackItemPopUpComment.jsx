@@ -63,7 +63,6 @@ const FeedbackItemPopUpComment = ({ feedbackId }) => {
         }
       })
     })
-    // getAllComments();
   }
   return (
     <div className="p-8">
@@ -83,7 +82,9 @@ const FeedbackItemPopUpComment = ({ feedbackId }) => {
                       onChange={(e) => setnewCommentText(e.target.value)}
                     />
                   ) : (
-                    <p className="text-gray-600">{comment.text}</p>
+                    <p className="text-gray-600">
+                      {comment.text}
+                    </p>
                   )}
 
                   <div className="text-sm text-gray-400 mt-2">

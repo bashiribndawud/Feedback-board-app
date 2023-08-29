@@ -214,8 +214,8 @@ export default function Home() {
           )}
         </p>
       </div>
-      <div className="bg-gray-100 px-8 py-4 flex border-b items-center">
-        <div className="grow flex items-center gap-4 text-gray-600">
+      <div className="bg-gray-100 px-8 py-4 flex border-b items-center flex-wrap">
+        <div className="grow flex items-center gap-4 text-gray-600 flex-wrap">
           <select
             value={sort}
             onChange={(e) => {
@@ -241,7 +241,7 @@ export default function Home() {
             />
           </div>
         </div>
-        <Button onClick={openFeedBackModalForm} primary>
+        <Button onClick={openFeedBackModalForm} primary className="mt-4 sm:mt-0">
           Make a suggestion
         </Button>
       </div>

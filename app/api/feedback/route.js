@@ -2,6 +2,7 @@ import { connectToDatabase } from "@utils/connectDatabase";
 import { FeedBackModel } from "@app/models/Feedback";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { CommentModel } from "@app/models/Comments";
 
 export async function POST(request) {
   try {
@@ -46,13 +47,20 @@ export async function GET(req) {
       if (sortParam === "votes") {
         sortDefinition = { votesCountCached: -1 };
       }
-      
+
       let filter = null;
       if (searchPhrase) {
+        const comment = await CommentModel.find(
+          { text: { $regex: ".*" + searchPhrase + ".*" } },
+          "feedbackId",
+          { limit: 20 }
+        );
+        
         filter = {
           $or: [
             { title: { $regex: ".*" + searchPhrase + ".*" } },
             { description: { $regex: ".*" + searchPhrase + ".*" } },
+            {_id: comment.map(c => c.feedbackId)}
           ],
         };
       } else {

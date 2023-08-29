@@ -34,9 +34,6 @@ const FeedbackItemPopUpCommentForm = ({feedbackId, onPost}) => {
           JSON.stringify(commentData)
         );
         await signIn('google');
-        // setCommentText("");
-        // setUploads([]);
-        // onPost();
     }
     
     

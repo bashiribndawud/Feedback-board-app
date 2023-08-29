@@ -43,7 +43,7 @@ const FeedBackItem = ({
   }
 
   const iVote = votes?.find((v) => v.user === session?.user?.email);
-  
+  const shortDesc = description.substring(0, 200);
   return (
     <a
       href="#"
@@ -55,7 +55,10 @@ const FeedBackItem = ({
     >
       <div>
         <h2 className="font-bold">{title}</h2>
-        <p className="text-gray-600 text-sm ">{description}</p>
+        <p className="text-gray-600 text-sm ">
+          {shortDesc}
+          {shortDesc.length < description.length ? "..." : ""}
+        </p>
       </div>
       {showLoginPopUp && (
         <PopUp
