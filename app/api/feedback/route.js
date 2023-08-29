@@ -34,8 +34,8 @@ export async function GET(req) {
       );
     } else {
       const sortParam = url.searchParams.get("sort");
-      const lastId = url.searchParams.get("lastId");
-      console.log(lastId);
+      const loadedRows = url.searchParams.get("loadedRows");
+      const searchPhrase = url.searchParams.get("search");
       let sortDefinition;
       if (sortParam === "latest") {
         sortDefinition = { createdAt: -1 };
@@ -46,11 +46,24 @@ export async function GET(req) {
       if (sortParam === "votes") {
         sortDefinition = { votesCountCached: -1 };
       }
-      const filter = lastId ? {_id: {$gt: lastId}} : null
+      
+      let filter = null;
+      if (searchPhrase) {
+        filter = {
+          $or: [
+            { title: { $regex: ".*" + searchPhrase + ".*" } },
+            { description: { $regex: ".*" + searchPhrase + ".*" } },
+          ],
+        };
+      } else {
+        filter = null;
+      }
+
       return Response.json(
         await FeedBackModel.find(filter, null, {
           sort: sortDefinition,
-          limit: 10,
+          skip: loadedRows,
+          limit: 5,
         }).populate("user")
       );
     }

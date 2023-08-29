@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import FeedBackItem from "./components/FeedBackItem";
 import FeedBackFormModal from "./components/FeedBackFormModal";
@@ -9,17 +9,35 @@ import { useSession, signIn, signOut, useClient } from "next-auth/react";
 import axios from "axios";
 import SignOut from "./components/icons/SignOut";
 import SignIn from "./components/icons/SignIn";
+import Loader from "./components/Loader";
+import Search from "./components/icons/Search";
+import { debounce } from "lodash";
 
 export default function Home() {
   const [showFeedBackPopUpForm, setShowFeedBackPopUpForm] = useState(false);
   const [showFeedBackPopupItem, setShowFeedBackPopupItem] = useState(null);
   const [FeedBacks, setFeedbacks] = useState([]);
   const [feedbackId, setFeedbacksId] = useState("");
+  const waitingRef = useRef(false);
+  const [waiting, setWaiting] = useState(false);
   const [voteLoading, setVoteLoading] = useState(false);
   const [sort, setSort] = useState("votes");
-  const [lastId, setLastId] = useState('')
+  const [fetchingFeedbacks, setFetchingFeedback] = useState(false);
+  const fetchingFeedbacksRef = useRef(false);
+  const everythingLoaded = useRef(false);
+  const [searchPhrase, setsearchPhrase] = useState("");
+  const loadedRows = useRef(0);
+  const sortRef = useRef("votes");
+  const searchPhraseRef = useRef("");
   const [votes, setVotes] = useState([]);
   const { data: session } = useSession();
+  const debouncedFetchFeedbacks = useRef(
+    debounce((append = false) => FetchAllFeedBacks(append), 300)
+  );
+
+  useEffect(() => {
+    FetchAllFeedBacks();
+  }, []);
 
   function openFeedBackModalForm() {
     setShowFeedBackPopUpForm(true);
@@ -32,8 +50,17 @@ export default function Home() {
   // GET -> get all feedbacks
 
   useEffect(() => {
-    FetchAllFeedBacks();
-  }, [sort]);
+    loadedRows.current = 0;
+    sortRef.current = sort;
+    everythingLoaded.current = false;
+    searchPhraseRef.current = searchPhrase;
+    if (FeedBacks?.length > 0) {
+      setFeedbacks([]);
+    }
+    setWaiting(true);
+    waitingRef.current = true;
+    debouncedFetchFeedbacks.current();
+  }, [sort, searchPhrase]);
 
   // GET -> votes from all fetched feedbacks
   useEffect(() => {
@@ -78,33 +105,62 @@ export default function Home() {
   async function fetchVotes() {
     setVoteLoading(true);
     const res = await axios.get(
-      "/api/vote?feedbackIds=" + FeedBacks.map((f) => f._id).join(",")
+      "/api/vote?feedbackIds=" + FeedBacks?.map((f) => f._id).join(",")
     );
     setVotes(res.data);
     setVoteLoading(false);
   }
-  function handleScroll(e){
-    const html = window.document.querySelector('html');
+  function handleScroll(e) {
+    const html = window.document.querySelector("html");
     const howMuchScrolled = html.scrollTop;
-    const howMuchIsToScroll = html.scrollHeight
-    const leftToScroll = howMuchIsToScroll - howMuchScrolled - html.clientHeight;
-    console.log({ leftToScroll });
+    const howMuchIsToScroll = html.scrollHeight;
+    const leftToScroll =
+      howMuchIsToScroll - howMuchScrolled - html.clientHeight;
+    if (leftToScroll <= 100) {
+      FetchAllFeedBacks(true);
+    }
   }
-  function unregisterScrollListerner(){
+  function unregisterScrollListerner() {
     window.removeEventListener("scroll", handleScroll);
   }
-  function registerScrollLsitener(){
-    window.addEventListener('scroll', handleScroll)
+  function registerScrollLsitener() {
+    window.addEventListener("scroll", handleScroll);
   }
   useEffect(() => {
-    registerScrollLsitener()
+    registerScrollLsitener();
 
-    return () => {unregisterScrollListerner();}
-  },[])
-  async function FetchAllFeedBacks() {
-    const res = await axios.get(`/api/feedback?sort=${sort}&lastId=${lastId}`);
-    setFeedbacks(res.data);
-    setLastId(res.data[res.data.length - 1]._id)
+    return () => {
+      unregisterScrollListerner();
+    };
+  }, []);
+
+  async function FetchAllFeedBacks(append = false) {
+    // if we are already fetching stop here
+    if (fetchingFeedbacksRef.current) return;
+    if (everythingLoaded.current) return;
+    fetchingFeedbacksRef.current = true;
+    setFetchingFeedback(true);
+    axios
+      .get(
+        `/api/feedback?sort=${sortRef.current}&loadedRows=${loadedRows.current}&search=${searchPhraseRef.current}`
+      )
+      .then((res) => {
+        if (append) {
+          setFeedbacks((currentFeebacks) => [...currentFeebacks, ...res.data]);
+        } else {
+          setFeedbacks(res.data);
+        }
+        if (res.data?.length > 0) {
+          loadedRows.current += res.data.length;
+        }
+        if (res.data?.length === 0) {
+          everythingLoaded.current = false;
+        }
+        fetchingFeedbacksRef.current = false;
+        setFetchingFeedback(false);
+        waitingRef.current = false;
+        setWaiting(false);
+      });
   }
 
   function handleUserLogOut(e) {
@@ -125,9 +181,8 @@ export default function Home() {
     await FetchAllFeedBacks();
   }
 
-
   return (
-    <main className="bg-white  md:max-w-2xl mx-auto md:shadow-lg md:rounded-lg md:mt-8 overflow-hidden">
+    <main className="bg-white md:mb-8  md:max-w-2xl mx-auto md:shadow-lg md:rounded-lg md:mt-8 overflow-hidden">
       <div className="bg-gradient-to-r from-cyan-400 to-blue-400 p-8">
         <h1 className="font-bold text-xl ">bashAcademy</h1>
         <p className="text-opacity-90 text-slate-700">
@@ -160,38 +215,58 @@ export default function Home() {
         </p>
       </div>
       <div className="bg-gray-100 px-8 py-4 flex border-b items-center">
-        <div className="grow flex items-center">
-          <span className="text-gray-400 text-sm">Sort by:</span>
+        <div className="grow flex items-center gap-4 text-gray-600">
           <select
             value={sort}
-            onChange={(e) => setSort(e.target.value)}
+            onChange={(e) => {
+              setSort(e.target.value);
+              lastId.current = "";
+            }}
             name=""
             id=""
-            className="bg-transparent py-2 px-2 text-gray-600"
+            className="bg-transparent py-2 px-2 "
           >
             <option value="votes">Most voted</option>
             <option value="latest">Latest</option>
             <option value="oldest">Oldest</option>
           </select>
+          <div className="relative">
+            <Search className="w-4 h-4 absolute top-3 left-2 pointer-events-none" />
+            <input
+              className="bg-transparent p-2 pl-8 focus:border-none focus:outline-blue-400 rounded-md"
+              type="text"
+              placeholder="Search..."
+              value={searchPhrase}
+              onChange={(e) => setsearchPhrase(e.target.value)}
+            />
+          </div>
         </div>
         <Button onClick={openFeedBackModalForm} primary>
           Make a suggestion
         </Button>
       </div>
       <div className="px-4 md:px-8">
-        {FeedBacks.length > 0 &&
-          FeedBacks.map((feedback) => (
-            <FeedBackItem
-              key={feedback.title}
-              {...feedback}
-              onOpen={() => openFeedBackPopupItem(feedback)}
-              votes={votes.filter(
-                (v) => v.feedbackId.toString() === feedback._id.toString()
-              )}
-              onVoteChange={fetchVotes}
-              parentLoadingVotes={voteLoading}
-            />
-          ))}
+        {FeedBacks?.length === 0 && !fetchingFeedbacks && !waiting && (
+          <div className="p-4 text-4xl text-gray-500">Nothing Found :( </div>
+        )}
+
+        {FeedBacks?.map((feedback) => (
+          <FeedBackItem
+            key={feedback.title}
+            {...feedback}
+            onOpen={() => openFeedBackPopupItem(feedback)}
+            votes={votes.filter(
+              (v) => v.feedbackId.toString() === feedback._id.toString()
+            )}
+            onVoteChange={fetchVotes}
+            parentLoadingVotes={voteLoading}
+          />
+        ))}
+        {(fetchingFeedbacks || waiting) && (
+          <div className="p-2 flex items-center justify-center">
+            <Loader />
+          </div>
+        )}
       </div>
       {showFeedBackPopUpForm && (
         <FeedBackFormModal
